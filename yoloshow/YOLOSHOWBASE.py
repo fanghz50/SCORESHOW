@@ -1,3 +1,5 @@
+import random
+
 from utils import glo
 
 glo._init()
@@ -489,10 +491,12 @@ class YOLOSHOWBASE:
         model_conditions = {
             "yolov5": lambda name: "yolov5" in name and not self.checkSegName(name),
             "yolov7": lambda name: "yolov7" in name,
-            "yolov8": lambda name: "yolov8" in name and not any(func(name) for func in [self.checkSegName, self.checkPoseName, self.checkObbName]),
+            "yolov8": lambda name: "yolov8" in name and not any(
+                func(name) for func in [self.checkSegName, self.checkPoseName, self.checkObbName]),
             "yolov9": lambda name: "yolov9" in name,
             "yolov10": lambda name: "yolov10" in name,
-            "yolov11": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and not any(func(name) for func in [self.checkSegName, self.checkPoseName, self.checkObbName]),
+            "yolov11": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and not any(
+                func(name) for func in [self.checkSegName, self.checkPoseName, self.checkObbName]),
             "rtdetr": lambda name: "rtdetr" in name,
             "yolov5-seg": lambda name: "yolov5" in name and self.checkSegName(name),
             "yolov8-seg": lambda name: "yolov8" in name and self.checkSegName(name),
@@ -500,7 +504,7 @@ class YOLOSHOWBASE:
             "yolov8-pose": lambda name: "yolov8" in name and self.checkPoseName(name),
             "yolov11-pose": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and self.checkPoseName(name),
             "yolov8-obb": lambda name: "yolov8" in name and self.checkObbName(name),
-            "yolov11-obb": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) in name and self.checkObbName(name),
+            "yolov11-obb": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and self.checkObbName(name),
             "fastsam": lambda name: "fastsam" in name,
             "samv2": lambda name: any(sub in name for sub in ["sam2", "samv2"]),
             "sam": lambda name: "sam" in name
@@ -530,18 +534,17 @@ class YOLOSHOWBASE:
 
     def checkTaskName(self, modelname, taskname):
         if "yolov5" in modelname:
-            return bool(re.match(f'yolov5.?-{taskname}.*\.pt$', modelname))
+            return bool(re.match(f'yolo?5.?-{taskname}.*\.pt$', modelname))
         elif "yolov7" in modelname:
-            return bool(re.match(f'yolov7.?-{taskname}.*\.pt$', modelname))
+            return bool(re.match(f'yolo?7.?-{taskname}.*\.pt$', modelname))
         elif "yolov8" in modelname:
-            return bool(re.match(f'yolov8.?-{taskname}.*\.pt$', modelname))
+            return bool(re.match(f'yolo?8.?-{taskname}.*\.pt$', modelname))
         elif "yolov9" in modelname:
-            return bool(re.match(f'yolov9.?-{taskname}.*\.pt$', modelname))
+            return bool(re.match(f'yolo?9.?-{taskname}.*\.pt$', modelname))
         elif "yolov10" in modelname:
-            return bool(re.match(f'yolov10.?-{taskname}.*\.pt$', modelname))
+            return bool(re.match(f'yolo?10.?-{taskname}.*\.pt$', modelname))
         elif "yolo11" in modelname:
-            return bool(re.match(f'yolo11.?-{taskname}.*\.pt$', modelname)) or bool(
-                re.match(f'yolov11.?-{taskname}.*\.pt$', modelname))
+            return bool(re.match(f'yolo?11.?-{taskname}.*\.pt$', modelname))
 
     # 解决 Modelname 当中的 seg命名问题
     def checkSegName(self, modelname):
@@ -635,8 +638,19 @@ class YOLOSHOWBASE:
 
     # 加载 Setting 栏
     def loadConfig(self):
+        # 1、随机初始化超参数，防止切换模型时，超参数不变
+        params = {"iou": round(random.uniform(0, 1), 2),
+                  "conf": round(random.uniform(0, 1), 2),
+                  "delay": random.randint(10, 50),
+                  "line_thickness": random.randint(1, 5)}
+        self.updateParams(params)
+        # 2、绑定配置项超参数
         params = {"iou": 0.45, "conf": 0.25, "delay": 10, "line_thickness": 3}
         params = self.loadAndSetParams('config/setting.json', params)
+        self.updateParams(params)
+
+    # 更新Config超参数
+    def updateParams(self, params):
         self.ui.iou_spinbox.setValue(params['iou'])
         self.ui.iou_slider.setValue(int(params['iou'] * 100))
         self.ui.conf_spinbox.setValue(params['conf'])

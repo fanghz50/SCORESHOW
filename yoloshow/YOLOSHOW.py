@@ -232,6 +232,8 @@ class YOLOSHOW(QMainWindow, YOLOSHOWBASE):
         else:
             self.yolo_threads.set(model_name, MODEL_THREAD_CLASSES[model_name]())
             self.initModel(yoloname=model_name)
+            self.loadConfig()
+            self.showStatus(f"Change Model to {model_name} Successfully")
 
     def runModelProcess(self, yolo_name):
         yolo_thread = self.yolo_threads.get(yolo_name)
