@@ -1,7 +1,9 @@
-
 from utils import glo
+
 glo._init()
-glo.set_value('yoloname', "yolov5 yolov7 yolov8 yolov9 yolov10 yolov5-seg yolov8-seg rtdetr yolov8-pose yolov8-obb")
+glo.set_value('yoloname', "yolov5 yolov7 yolov8 yolov9 yolov10 yolov11 rtdetr "
+                          "yolov5-seg yolov8-seg yolov11-seg yolov8-pose yolov8-obb yolov11-obb yolov11-pose "
+                          "fastsam sam samv2")
 from utils.logger import LoggerUtils
 import re
 import socket
@@ -37,7 +39,9 @@ from yolocode.yolov11.YOLOv11Thread import YOLOv11Thread
 from yolocode.yolov11.YOLOv11SegThread import YOLOv11SegThread
 from yolocode.yolov11.YOLOv11ObbThread import YOLOv11ObbThread
 from yolocode.yolov11.YOLOv11PoseThread import YOLOv11PoseThread
-
+from yolocode.fastsam.FastSAMThread import FastSAMThread
+from yolocode.sam.SAMThread import SAMThread
+from yolocode.sam.SAMv2Thread import SAMv2Thread
 
 GLOBAL_WINDOW_STATE = True
 WIDTH_LEFT_BOX_STANDARD = 80
@@ -61,7 +65,10 @@ MODEL_THREAD_CLASSES = {
     "yolov8-pose": YOLOv8PoseThread,
     "yolov11-pose": YOLOv11PoseThread,
     "yolov8-obb": YOLOv8ObbThread,
-    "yolov11-obb": YOLOv11ObbThread
+    "yolov11-obb": YOLOv11ObbThread,
+    "fastsam": FastSAMThread,
+    "sam": SAMThread,
+    "samv2": SAMv2Thread
 }
 # 扩展MODEL_THREAD_CLASSES字典
 MODEL_NAME_DICT = list(MODEL_THREAD_CLASSES.items())
@@ -70,7 +77,7 @@ for key, value in MODEL_NAME_DICT:
     MODEL_THREAD_CLASSES[f"{key}_right"] = value
 
 ALL_MODEL_NAMES = ["yolov5", "yolov7", "yolov8", "yolov9", "yolov10", "yolov11", "yolov5-seg", "yolov8-seg", "rtdetr",
-                   "yolov8-pose", "yolov8-obb"]
+                   "yolov8-pose", "yolov8-obb", "fastsam", "sam", "samv2"]
 loggertool = LoggerUtils()
 
 
@@ -482,33 +489,36 @@ class YOLOSHOWBASE:
         model_conditions = {
             "yolov5": lambda name: "yolov5" in name and not self.checkSegName(name),
             "yolov7": lambda name: "yolov7" in name,
-            "yolov8": lambda name: "yolov8" in name and not self.checkSegName(name) and not self.checkPoseName(
-                name) and not self.checkObbName(name),
+            "yolov8": lambda name: "yolov8" in name and not any(func(name) for func in [self.checkSegName, self.checkPoseName, self.checkObbName]),
             "yolov9": lambda name: "yolov9" in name,
             "yolov10": lambda name: "yolov10" in name,
-            "yolov11": lambda name: "yolo11" in name and not self.checkSegName(name) and not self.checkPoseName(
-                name) and not self.checkObbName(name),
+            "yolov11": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and not any(func(name) for func in [self.checkSegName, self.checkPoseName, self.checkObbName]),
             "rtdetr": lambda name: "rtdetr" in name,
             "yolov5-seg": lambda name: "yolov5" in name and self.checkSegName(name),
             "yolov8-seg": lambda name: "yolov8" in name and self.checkSegName(name),
-            "yolov11-seg": lambda name: "yolo11" in name and self.checkSegName(name),
+            "yolov11-seg": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and self.checkSegName(name),
             "yolov8-pose": lambda name: "yolov8" in name and self.checkPoseName(name),
-            "yolov11-pose": lambda name: "yolo11" in name and self.checkPoseName(name),
+            "yolov11-pose": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) and self.checkPoseName(name),
             "yolov8-obb": lambda name: "yolov8" in name and self.checkObbName(name),
-            "yolov11-obb": lambda name: "yolo11" in name and self.checkObbName(name)
+            "yolov11-obb": lambda name: any(sub in name for sub in ["yolov11", "yolo11"]) in name and self.checkObbName(name),
+            "fastsam": lambda name: "fastsam" in name,
+            "samv2": lambda name: any(sub in name for sub in ["sam2", "samv2"]),
+            "sam": lambda name: "sam" in name
         }
 
         if mode:
             # VS mode
             model_name = self.model_name1 if mode == "left" else self.model_name2
+            model_name = model_name.lower()
             for yoloname, condition in model_conditions.items():
                 if condition(model_name):
                     return f"{yoloname}_{mode}"
         else:
             # Single mode
-            for model_name, condition in model_conditions.items():
-                if condition(self.model_name):
-                    return model_name
+            model_name = self.model_name.lower()
+            for yoloname, condition in model_conditions.items():
+                if condition(model_name):
+                    return yoloname
         return None
 
     # 检查模型是否符合命名要求
@@ -518,50 +528,32 @@ class YOLOSHOWBASE:
                 return True
         return False
 
+    def checkTaskName(self, modelname, taskname):
+        if "yolov5" in modelname:
+            return bool(re.match(f'yolov5.?-{taskname}.*\.pt$', modelname))
+        elif "yolov7" in modelname:
+            return bool(re.match(f'yolov7.?-{taskname}.*\.pt$', modelname))
+        elif "yolov8" in modelname:
+            return bool(re.match(f'yolov8.?-{taskname}.*\.pt$', modelname))
+        elif "yolov9" in modelname:
+            return bool(re.match(f'yolov9.?-{taskname}.*\.pt$', modelname))
+        elif "yolov10" in modelname:
+            return bool(re.match(f'yolov10.?-{taskname}.*\.pt$', modelname))
+        elif "yolo11" in modelname:
+            return bool(re.match(f'yolo11.?-{taskname}.*\.pt$', modelname)) or bool(
+                re.match(f'yolov11.?-{taskname}.*\.pt$', modelname))
+
     # 解决 Modelname 当中的 seg命名问题
     def checkSegName(self, modelname):
-        if "yolov5" in modelname:
-            return bool(re.match(r'yolov5.?-seg.*\.pt$', modelname))
-        elif "yolov7" in modelname:
-            return bool(re.match(r'yolov7.?-seg.*\.pt$', modelname))
-        elif "yolov8" in modelname:
-            return bool(re.match(r'yolov8.?-seg.*\.pt$', modelname))
-        elif "yolov9" in modelname:
-            return bool(re.match(r'yolov9.?-seg.*\.pt$', modelname))
-        elif "yolov10" in modelname:
-            return bool(re.match(r'yolov10.?-seg.*\.pt$', modelname))
-        elif "yolo11" in modelname:
-            return bool(re.match(r'yolo11.?-seg.*\.pt$', modelname))
+        return self.checkTaskName(modelname, "seg")
 
     # 解决  Modelname 当中的 pose命名问题
     def checkPoseName(self, modelname):
-        if "yolov5" in modelname:
-            return bool(re.match(r'yolov5.?-pose.*\.pt$', modelname))
-        elif "yolov7" in modelname:
-            return bool(re.match(r'yolov7.?-pose.*\.pt$', modelname))
-        elif "yolov8" in modelname:
-            return bool(re.match(r'yolov8.?-pose.*\.pt$', modelname))
-        elif "yolov9" in modelname:
-            return bool(re.match(r'yolov9.?-pose.*\.pt$', modelname))
-        elif "yolov10" in modelname:
-            return bool(re.match(r'yolov10.?-pose.*\.pt$', modelname))
-        elif "yolo11" in modelname:
-            return bool(re.match(r'yolo11.?-pose.*\.pt$', modelname))
+        return self.checkTaskName(modelname, "pose")
 
     # 解决  Modelname 当中的 pose命名问题
     def checkObbName(self, modelname):
-        if "yolov5" in modelname:
-            return bool(re.match(r'yolov5.?-obb.*\.pt$', modelname))
-        elif "yolov7" in modelname:
-            return bool(re.match(r'yolov7.?-obb.*\.pt$', modelname))
-        elif "yolov8" in modelname:
-            return bool(re.match(r'yolov8.?-obb.*\.pt$', modelname))
-        elif "yolov9" in modelname:
-            return bool(re.match(r'yolov9.?-obb.*\.pt$', modelname))
-        elif "yolov10" in modelname:
-            return bool(re.match(r'yolov10.?-obb.*\.pt$', modelname))
-        elif "yolo11" in modelname:
-            return bool(re.match(r'yolo11.?-obb.*\.pt$', modelname))
+        return self.checkTaskName(modelname, "obb")
 
     # 停止运行中的模型
     def quitRunningModel(self, stop_status=False):
