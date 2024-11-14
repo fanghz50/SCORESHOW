@@ -18,6 +18,7 @@ from collections import defaultdict
 from yolocode.yolov5.utils.general import increment_path
 from yolocode.yolov8.utils.checks import check_imgsz
 from yolocode.yolov8.utils.torch_utils import select_device
+from concurrent.futures import ThreadPoolExecutor
 
 
 class YOLOv8Thread(QThread):
@@ -50,6 +51,7 @@ class YOLOv8Thread(QThread):
         self.progress_value = 0  # progress bar
         self.res_status = False  # result status
         self.parent_workpath = None  # parent work path
+        self.executor = ThreadPoolExecutor(max_workers=1)  # 只允许一个线程运行
 
         # YOLOv8 参数设置
         self.model = None
@@ -76,6 +78,7 @@ class YOLOv8Thread(QThread):
         self.line_thickness = 3
         self.results_picture = dict()  # 结果图片
         self.results_table = list()  # 结果表格
+        self.file_path = None # 文件路径
         self.callbacks = defaultdict(list, callbacks.default_callbacks)  # add callbacks
         callbacks.add_integration_callbacks(self)
 
@@ -110,6 +113,7 @@ class YOLOv8Thread(QThread):
             self.setup_source(source)
             self.detect()
 
+    @torch.no_grad()
     def detect(self, is_folder_last=False):
         # warmup model
         if not self.done_warmup:
@@ -121,6 +125,8 @@ class YOLOv8Thread(QThread):
         start_time = time.time()  # used to calculate the frame rate
         while True:
             if self.stop_dtc:
+                if self.is_folder and not is_folder_last:
+                    break
                 self.send_msg.emit('Stop Detection')
                 # --- 发送图片和表格结果 --- #
                 self.send_result_picture.emit(self.results_picture)  # 发送图片结果
@@ -202,7 +208,7 @@ class YOLOv8Thread(QThread):
                         "postprocess": self.dt[2].dt * 1e3 / n,
                     }
                     p, im0 = path[i], None if self.source_type.tensor else im0s[i].copy()
-                    p = Path(p)
+                    self.file_path = p = Path(p)
 
                     label_str = self.write_results(i, self.results, (p, im, im0))  # labels   /// original :s +=
 
@@ -243,6 +249,9 @@ class YOLOv8Thread(QThread):
                         time.sleep(self.speed_thres / 1000)  # delay , ms
 
                 if self.is_folder and not is_folder_last:
+                    # 判断当前是否为视频
+                    if self.file_path and self.file_path.suffix[1:] in VID_FORMATS and percent != self.progress_value:
+                        continue
                     break
 
                 if percent == self.progress_value and not self.webcam:

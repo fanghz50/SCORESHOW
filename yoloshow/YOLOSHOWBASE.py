@@ -534,17 +534,17 @@ class YOLOSHOWBASE:
 
     def checkTaskName(self, modelname, taskname):
         if "yolov5" in modelname:
-            return bool(re.match(f'yolo?5.?-{taskname}.*\.pt$', modelname))
+            return bool(re.match(f'yolo.?5.?-{taskname}.*\.pt$', modelname))
         elif "yolov7" in modelname:
-            return bool(re.match(f'yolo?7.?-{taskname}.*\.pt$', modelname))
+            return bool(re.match(f'yolo.?7.?-{taskname}.*\.pt$', modelname))
         elif "yolov8" in modelname:
-            return bool(re.match(f'yolo?8.?-{taskname}.*\.pt$', modelname))
+            return bool(re.match(f'yolo.?8.?-{taskname}.*\.pt$', modelname))
         elif "yolov9" in modelname:
-            return bool(re.match(f'yolo?9.?-{taskname}.*\.pt$', modelname))
+            return bool(re.match(f'yolo.?9.?-{taskname}.*\.pt$', modelname))
         elif "yolov10" in modelname:
-            return bool(re.match(f'yolo?10.?-{taskname}.*\.pt$', modelname))
+            return bool(re.match(f'yolo.?10.?-{taskname}.*\.pt$', modelname))
         elif "yolo11" in modelname:
-            return bool(re.match(f'yolo?11.?-{taskname}.*\.pt$', modelname))
+            return bool(re.match(f'yolo.?11.?-{taskname}.*\.pt$', modelname))
 
     # 解决 Modelname 当中的 seg命名问题
     def checkSegName(self, modelname):

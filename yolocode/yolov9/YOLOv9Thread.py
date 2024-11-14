@@ -1,138 +1,35 @@
 import os.path
 import time
 
-import cv2
 import numpy as np
 import torch
-from PySide6.QtCore import QThread, Signal
 from pathlib import Path
 
 from models.common import DetectMultiBackend_YOLOv9
-from yolocode.yolov9.utils.dataloaders import IMG_FORMATS, VID_FORMATS, LoadImages, LoadScreenshots, LoadStreams
-from yolocode.yolov9.utils.general import (LOGGER, Profile, check_file, check_img_size, check_imshow,
-                                           check_requirements, colorstr, cv2,
-                                           increment_path, non_max_suppression, print_args, scale_boxes,
-                                           strip_optimizer, xyxy2xywh)
-from yolocode.yolov9.utils.plots import Annotator, colors, save_one_box
-from yolocode.yolov9.utils.torch_utils import select_device, smart_inference_mode
+from yolocode.yolov5.YOLOv5Thread import YOLOv5Thread
+from yolocode.yolov9.utils.dataloaders import VID_FORMATS
+from yolocode.yolov9.utils.general import (Profile, check_img_size, cv2, non_max_suppression, scale_boxes)
+from yolocode.yolov9.utils.plots import Annotator, colors
 
 
-class YOLOv9Thread(QThread):
-    # 输入 输出 消息
-    send_input = Signal(np.ndarray)
-    send_output = Signal(np.ndarray)
-    send_msg = Signal(str)
-    # 状态栏显示数据 进度条数据
-    send_fps = Signal(str)  # fps
-    # send_labels = Signal(dict)  # Detected target results (number of each category)
-    send_progress = Signal(int)  # Completeness
-    send_class_num = Signal(int)  # Number of categories detected
-    send_target_num = Signal(int)  # Targets detected
-    send_result_picture = Signal(dict)  # Send the result picture
-    send_result_table = Signal(list)    # Send the result table
-
+class YOLOv9Thread(YOLOv5Thread):
 
     def __init__(self):
         super(YOLOv9Thread, self).__init__()
-        # YOLOSHOW 界面参数设置
-        self.current_model_name = None  # The detection model name to use
-        self.new_model_name = None  # Models that change in real time
-        self.source = None  # input source
-        self.stop_dtc = True  # 停止检测
-        self.is_continue = True  # continue/pause
-        self.save_res = False  # Save test results
-        self.iou_thres = 0.45  # iou
-        self.conf_thres = 0.25  # conf
-        self.speed_thres = 10  # delay, ms
-        self.labels_dict = {}  # return a dictionary of results
-        self.progress_value = 0  # progress bar
-        self.res_status = False  # result status
-        self.parent_workpath = None  # parent work path
-
-        # YOLOv9 参数设置
-        self.model = None
-        self.data = 'yolocode/yolov9/data/coco.yaml'  # data_dict
-        self.imgsz = (640, 640)
-        self.device = ''
-        self.dataset = None
-        self.task = 'detect'
-        self.dnn = False
-        self.half = False
         self.agnostic_nms = False
-        self.stream_buffer = False
-        self.crop_fraction = 1.0
-        self.done_warmup = False
-        self.vid_path, self.vid_writerm, self.vid_cap = None, None, None
-        self.batch = None
-        self.project = 'runs/detect'
-        self.name = 'exp'
-        self.exist_ok = False
-        self.vid_stride = 1  # 视频帧率
-        self.max_det = 1000  # 最大检测数
-        self.classes = None  # 指定检测类别  --class 0, or --class 0 2 3
-        self.line_thickness = 3
-        self.results_picture = dict()     # 结果图片
-        self.results_table = list()         # 结果表格
+        self.data = 'yolocode/yolov9/data/coco.yaml'  # data_dict
 
-    def run(self):
-
-        source = str(self.source)
-        # 判断输入源类型
-        if isinstance(IMG_FORMATS, str) or isinstance(IMG_FORMATS, tuple):
-            self.is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
-        else:
-            self.is_file = Path(source).suffix[1:] in (IMG_FORMATS | VID_FORMATS)
-        self.is_url = source.lower().startswith(("rtsp://", "rtmp://", "http://", "https://"))
-        self.webcam = source.isnumeric() or source.endswith(".streams") or (self.is_url and not self.is_file)
-        self.screenshot = source.lower().startswith("screen")
-        # 判断输入源是否是文件夹，如果是列表，则是文件夹
-        self.is_folder = isinstance(self.source, list)
-        if self.save_res:
-            self.save_path = increment_path(Path(self.project) / self.name, exist_ok=self.exist_ok)  # increment run
-            self.save_path.mkdir(parents=True, exist_ok=True)  # make dir
-
-        # Load model
-        device = select_device(self.device)
-        weights = self.new_model_name
-        self.current_model_name = self.new_model_name
-        self.send_msg.emit("Loading model: {}".format(os.path.basename(self.new_model_name)))
-        model = DetectMultiBackend_YOLOv9(weights, device=device, dnn=self.dnn, data=self.data, fp16=self.half)
-        self.stride, self.names, self.pt = model.stride, model.names, model.pt
-        self.imgsz = check_img_size(self.imgsz, s=self.stride)  # check image size
-
-        # Dataloader 加载数据
-        bs = 1  # batch_size
-        vid_stride = self.vid_stride
-        dataset_list = []
-        if self.webcam:
-            dataset = LoadStreams(source, img_size=self.imgsz, stride=self.stride, auto=self.pt, vid_stride=vid_stride)
-            bs = len(dataset)
-        elif self.screenshot:
-            dataset = LoadScreenshots(source, img_size=self.imgsz, stride=self.stride, auto=self.pt)
-        elif self.is_folder:
-            for source_i in self.source:
-                dataset_list.append(
-                    LoadImages(source_i, img_size=self.imgsz, stride=self.stride, auto=self.pt, vid_stride=vid_stride))
-        else:
-            dataset = LoadImages(source, img_size=self.imgsz, stride=self.stride, auto=self.pt, vid_stride=vid_stride)
-        self.vid_path, self.vid_writer = [None] * bs, [None] * bs  # 视频路径 视频写入器
-        model.warmup(imgsz=(1 if self.pt or model.triton else bs, 3, *self.imgsz))  # warmup
-        self.model = model
-        if self.is_folder:
-            for index, dataset in enumerate(dataset_list):
-                is_folder_last = True if index + 1 == len(dataset_list) else False
-                self.detect(dataset, device, bs, is_folder_last=is_folder_last)
-        else:
-            self.detect(dataset, device, bs)
-
-    def detect(self, dataset, device, bs, is_folder_last=False):
+    @torch.no_grad()
+    def detect(self, device, bs, is_folder_last=False):
         seen, windows, dt = 0, [], (Profile(), Profile(), Profile())
         # seen 表示图片计数
-        datasets = iter(dataset)
+        datasets = iter(self.dataset)
         count = 0  # run location frame
         start_time = time.time()  # used to calculate the frame rate
         while True:
             if self.stop_dtc:
+                if self.is_folder and not is_folder_last:
+                    break
                 self.send_msg.emit('Stop Detection')
                 # --- 发送图片和表格结果 --- #
                 self.send_result_picture.emit(self.results_picture)  # 发送图片结果
@@ -143,12 +40,12 @@ class YOLOv9Thread(QThread):
                 self.results_table = list()
                 # --- 发送图片和表格结果 --- #
                 # 释放资源
-                if hasattr(dataset, 'threads'):
-                    for thread in dataset.threads:
+                if hasattr(self.dataset, 'threads'):
+                    for thread in self.dataset.threads:
                         if thread.is_alive():
                             thread.join(timeout=1)  # Add timeout
-                if hasattr(dataset, 'cap'):
-                    dataset.cap.release()
+                if hasattr(self.dataset, 'cap'):
+                    self.dataset.cap.release()
                 cv2.destroyAllWindows()
                 if isinstance(self.vid_writer[-1], cv2.VideoWriter):
                     self.vid_writer[-1].release()
@@ -215,12 +112,12 @@ class YOLOv9Thread(QThread):
                 for i, det in enumerate(pred):  # per image
                     seen += 1
                     if self.webcam:  # batch_size >= 1
-                        p, im0, frame = path[i], im0s[i].copy(), dataset.count
+                        p, im0, frame = path[i], im0s[i].copy(), self.dataset.count
                         s += f'{i}: '
                     else:
-                        p, im0, frame = path, im0s.copy(), getattr(dataset, 'frame', 0)
+                        p, im0, frame = path, im0s.copy(), getattr(self.dataset, 'frame', 0)
 
-                    p = Path(p)  # to Path
+                    self.file_path = p = Path(p)  # to Path
                     if self.save_res:
                         save_path = str(self.save_path / p.name)  # im.jpg
                         self.res_path = save_path
@@ -251,8 +148,6 @@ class YOLOv9Thread(QThread):
 
                     # Stream results
                     im0 = annotator.result()
-                    # 发送结果
-                    im0 = annotator.result()
                     self.send_output.emit(im0)  # 输出图片
                     self.send_class_num.emit(class_nums)
                     self.send_target_num.emit(target_nums)
@@ -260,7 +155,7 @@ class YOLOv9Thread(QThread):
 
                     # Save results (image with detections)
                     if self.save_res:
-                        if dataset.mode == 'image':
+                        if self.dataset.mode == 'image':
                             cv2.imwrite(save_path, im0)
                         else:  # 'video' or 'stream'
                             if self.vid_path[i] != save_path:  # new video
@@ -283,6 +178,9 @@ class YOLOv9Thread(QThread):
                         time.sleep(self.speed_thres / 1000)  # delay , ms
 
                 if self.is_folder and not is_folder_last:
+                    # 判断当前是否为视频
+                    if self.file_path and self.file_path.suffix[1:] in VID_FORMATS and percent != self.progress_value:
+                        continue
                     break
 
                 if percent == self.progress_value and not self.webcam:

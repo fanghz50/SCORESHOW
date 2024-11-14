@@ -68,6 +68,7 @@ class YOLOv7Thread(QThread):
         self.line_thickness = 3
         self.results_picture = dict()  # 结果图片
         self.results_table = list()  # 结果表格
+        self.file_path = None
 
     @torch.no_grad()
     def run(self):
@@ -138,6 +139,8 @@ class YOLOv7Thread(QThread):
         while True:
             # 停止检测
             if self.stop_dtc:
+                if self.is_folder and not is_folder_last:
+                    break
                 self.send_msg.emit('Stop Detection')
                 # --- 发送图片和表格结果 --- #
                 self.send_result_picture.emit(self.results_picture)  # 发送图片结果
@@ -238,7 +241,7 @@ class YOLOv7Thread(QThread):
                         p, s, im0, frame = path[i], '%g: ' % i, im0s[i].copy(), dataset.count
                     else:
                         p, s, im0, frame = path, '', im0s, getattr(dataset, 'frame', 0)
-                    p = Path(p)  # to Path
+                    self.file_path = p = Path(p)  # to Path
                     if self.save_res:
                         self.save_path = str(self.save_dir / p.name)  # img.jpg
                         self.res_path = self.save_path
@@ -296,6 +299,9 @@ class YOLOv7Thread(QThread):
                         time.sleep(self.speed_thres / 1000)  # delay , ms
 
                 if self.is_folder and not is_folder_last:
+                    # 判断当前是否为视频
+                    if self.file_path and self.file_path.suffix[1:] in VID_FORMATS and percent != self.progress_value:
+                        continue
                     break
 
                 if percent == self.progress_value and not self.webcam:

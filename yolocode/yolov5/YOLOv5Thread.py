@@ -77,7 +77,7 @@ class YOLOv5Thread(QThread):
         self.line_thickness = 3
         self.results_picture = dict()     # 结果图片
         self.results_table = list()         # 结果表格
-
+        self.file_path = None
 
     def run(self):
         source = str(self.source)
@@ -136,6 +136,7 @@ class YOLOv5Thread(QThread):
         else:
             self.detect(device, bs)
 
+    @torch.no_grad()
     def detect(self, device, bs, is_folder_last=False):
         seen, windows, dt = 0, [], (Profile(device=device), Profile(device=device), Profile(device=device))
         # seen 表示图片计数
@@ -144,6 +145,8 @@ class YOLOv5Thread(QThread):
         start_time = time.time()  # used to calculate the frame rate
         while True:
             if self.stop_dtc:
+                if self.is_folder and not is_folder_last:
+                    break
                 self.send_msg.emit('Stop Detection')
                 # --- 发送图片和表格结果 --- #
                 self.send_result_picture.emit(self.results_picture)  # 发送图片结果
@@ -240,7 +243,7 @@ class YOLOv5Thread(QThread):
                     else:
                         p, im0, frame = path, im0s.copy(), getattr(self.dataset, "frame", 0)
 
-                    p = Path(p)  # to Path
+                    self.file_path = p = Path(p)  # to Path
                     if self.save_res:
                         save_path = str(self.save_path / p.name)  # im.jpg
                         self.res_path = save_path
@@ -305,6 +308,9 @@ class YOLOv5Thread(QThread):
                         time.sleep(self.speed_thres / 1000)  # delay , ms
 
                 if self.is_folder and not is_folder_last:
+                    # 判断当前是否为视频
+                    if self.file_path and self.file_path.suffix[1:] in VID_FORMATS and percent != self.progress_value:
+                        continue
                     break
 
                 if percent == self.progress_value and not self.webcam:
