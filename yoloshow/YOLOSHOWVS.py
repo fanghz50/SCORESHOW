@@ -322,7 +322,8 @@ class YOLOSHOWVS(QMainWindow, YOLOSHOWBASE):
                 self.yolo_threads.set(yoloname, MODEL_THREAD_CLASSES[yoloname]())
                 self.initModel(yoloname=yoloname)
                 self.loadConfig()
-                self.showStatus(f"Change Model to {yoloname} Successfully for Left Part")
+            now_model_name = str(self.model_name1).replace(".pt", "")
+            self.showStatus(f"Change Model to {now_model_name} Successfully for Left Part")
             # 重载 common 和 yolo 模块
             glo.set_value('yoloname1', yoloname)
         else:
@@ -334,7 +335,8 @@ class YOLOSHOWVS(QMainWindow, YOLOSHOWBASE):
                 self.yolo_threads.set(yoloname, MODEL_THREAD_CLASSES[yoloname]())
                 self.initModel(yoloname=yoloname)
                 self.loadConfig()
-                self.showStatus(f"Change Model to {yoloname} Successfully for Right Part")
+            now_model_name = str(self.model_name2).replace(".pt", "")
+            self.showStatus(f"Change Model to {now_model_name} Successfully for Right Part")
             # 重载 common 和 yolo 模块
             glo.set_value('yoloname2', yoloname)
 
