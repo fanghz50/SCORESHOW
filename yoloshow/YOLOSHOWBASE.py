@@ -9,7 +9,7 @@ glo.set_value('yoloname', "yolov5 yolov7 yolov8 yolov9 yolov10 yolov11 rtdetr "
 from utils.logger import LoggerUtils
 import re
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 import torch
 import json
 import os
@@ -359,6 +359,17 @@ class YOLOSHOWBASE:
         self.rtspUrl = None
         if rtspDialog.exec():
             self.rtspUrl = rtspDialog.urlLineEdit.text()
+            if rtspDialog.authCheckBox.isChecked() and self.rtspUrl:
+                parsed_url = urlparse(self.rtspUrl)
+                # 构造新 netloc，包含用户名和密码
+                username = rtspDialog.usernameLineEdit.text()
+                password = rtspDialog.passwordLineEdit.text()
+                netloc = f"{username}:{password}@{parsed_url.hostname}:{parsed_url.port}"
+                # 重组 URL
+                self.rtspUrl = urlunparse(
+                    (parsed_url.scheme, netloc, parsed_url.path, parsed_url.params, parsed_url.query,
+                     parsed_url.fragment))
+
         if self.rtspUrl:
             parsed_url = urlparse(self.rtspUrl)
             if parsed_url.scheme == 'rtsp':
