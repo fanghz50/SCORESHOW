@@ -1,7 +1,8 @@
 from utils import glo
 import json
 import os
-from ui.YOLOSHOWUI import Ui_MainWindow
+#from ui.YOLOSHOWUI import Ui_MainWindow
+from ui.YOLOSHOWUI_my import Ui_MainWindow
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QFileDialog, QMainWindow
 from yoloshow.YOLOThreadPool import YOLOThreadPool
@@ -13,7 +14,8 @@ GLOBAL_WINDOW_STATE = True
 WIDTH_LEFT_BOX_STANDARD = 80
 WIDTH_LEFT_BOX_EXTENDED = 200
 WIDTH_LOGO = 60
-UI_FILE_PATH = "ui/YOLOSHOWUI.ui"
+# UI_FILE_PATH = "ui/YOLOSHOWUI.ui"
+UI_FILE_PATH = "ui/YOLOSHOWUI_my.ui"
 KEYS_LEFT_BOX_MENU = ['src_menu', 'src_setting', 'src_webcam', 'src_folder', 'src_camera', 'src_vsmode', 'src_setting']
 
 
@@ -35,7 +37,7 @@ class YOLOSHOW(QMainWindow, YOLOSHOWBASE):
         self.initSiderWidget()
         # --- 加载UI --- #
 
-        # --- 最大化 最小化 关闭 --- #
+        # --- 最大化 最小化 关闭 --- #左上角三个圆点
         self.ui.maximizeButton.clicked.connect(self.maxorRestore)
         self.ui.minimizeButton.clicked.connect(self.showMinimized)
         self.ui.closeButton.clicked.connect(self.close)
@@ -43,40 +45,48 @@ class YOLOSHOW(QMainWindow, YOLOSHOWBASE):
         # --- 最大化 最小化 关闭 --- #
 
         # --- 播放 暂停 停止 --- #
-        self.playIcon = QtGui.QIcon()
+        self.playIcon = QtGui.QIcon()#用于存储按钮的图标：包含了“播放”和“暂停”图标
+        #为按钮的“正常”状态设置“播放”图标
         self.playIcon.addPixmap(QtGui.QPixmap(f"{self.current_workpath}/images/newsize/play.png"), QtGui.QIcon.Normal,
-                                QtGui.QIcon.Off)
+                                QtGui.QIcon.Off)#图标的状态为“正常”（未选中、未激活），图标模式为“关闭”（未选中）
+        #为按钮的“激活”状态设置“暂停”图标
         self.playIcon.addPixmap(QtGui.QPixmap(f"{self.current_workpath}/images/newsize/pause.png"), QtGui.QIcon.Active,
-                                QtGui.QIcon.On)
+                                QtGui.QIcon.On)#图标的状态为“激活”（鼠标悬停或按钮被点击），图标模式为“开启”（选中）
+        #为按钮的“选中”状态设置“停止/暂停”图标。
         self.playIcon.addPixmap(QtGui.QPixmap(f"{self.current_workpath}/images/newsize/pause.png"),
-                                QtGui.QIcon.Selected, QtGui.QIcon.On)
+                                QtGui.QIcon.Selected, QtGui.QIcon.On)#图标的状态为“选中”，图标模式为“开启”（选中）
+        #将按钮设置为可切换状态：在“选中”和“未选中”状态之间切换
         self.ui.run_button.setCheckable(True)
         self.ui.run_button.setIcon(self.playIcon)
         # --- 播放 暂停 停止 --- #
 
         # --- 侧边栏缩放 --- #
         self.ui.src_menu.clicked.connect(self.scaleMenu)  # hide menu button
+#########################################################################################################
         self.ui.src_setting.clicked.connect(self.scalSetting)  # setting button
         # --- 侧边栏缩放 --- #
 
-        # --- 自动加载/动态改变 PT 模型 --- #
-        self.pt_Path = f"{self.current_workpath}/ptfiles/"
-        os.makedirs(self.pt_Path, exist_ok=True)
-        self.pt_list = os.listdir(f'{self.current_workpath}/ptfiles/')
-        self.pt_list = [file for file in self.pt_list if file.endswith('.pt')]
+        # --- 自动加载/动态改变 PT 模型 --- #将其显示在一个下拉框（QComboBox）中，同时支持模型文件的动态更新和切换。
+        self.pt_Path = f"{self.current_workpath}/ptfiles/"#模型文件的存储路径
+        os.makedirs(self.pt_Path, exist_ok=True)#创建模型文件的存储目录（如果目录不存在）
+        self.pt_list = os.listdir(f'{self.current_workpath}/ptfiles/')#获取模型文件目录中的所有文件列表
+        self.pt_list = [file for file in self.pt_list if file.endswith('.pt')]#过滤出 .pt 文件
+        #指定排序依据为文件大小。
         self.pt_list.sort(key=lambda x: os.path.getsize(f'{self.current_workpath}/ptfiles/' + x))
-        self.ui.model_box.clear()
-        self.ui.model_box.addItems(self.pt_list)
-        self.qtimer_search = QTimer(self)
-        self.qtimer_search.timeout.connect(lambda: self.loadModels())
+        self.ui.model_box.clear()#清空下拉框
+        self.ui.model_box.addItems(self.pt_list)#将 .pt 文件列表添加到下拉框中
+        self.qtimer_search = QTimer(self)#定时器对象：定期检查模型文件目录的变化
+
+        self.qtimer_search.timeout.connect(lambda: self.loadModels())#加载 pt 模型到 model_box
         self.qtimer_search.start(2000)
+        #下拉框的选项发生变化时触发
         self.ui.model_box.currentTextChanged.connect(self.changeModel)
         # --- 自动加载/动态改变 PT 模型 --- #
 
         # --- 导入 图片/视频、调用摄像头、导入文件夹（批量处理）、调用网络摄像头、结果统计图片、结果统计表格 --- #
-        self.ui.src_img.clicked.connect(self.selectFile)
+        # self.ui.src_img.clicked.connect(self.selectFile)
         self.ui.src_webcam.clicked.connect(self.selectWebcam)
-        self.ui.src_folder.clicked.connect(self.selectFolder)
+        # self.ui.src_folder.clicked.connect(self.selectFolder)
         self.ui.src_camera.clicked.connect(self.selectRtsp)
         self.ui.src_result.clicked.connect(self.showResultStatics)
         self.ui.src_table.clicked.connect(self.showTableResult)
@@ -90,7 +100,8 @@ class YOLOSHOW(QMainWindow, YOLOSHOWBASE):
         # --- 导入模型、 导出结果 --- #
 
         # --- 视频、图片 预览 --- #
-        self.ui.main_leftbox.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+#确保 self.ui.main_leftbox 和 self.ui.main_rightbox 控件中显示的内容（如图片或视频）在水平和垂直方向上都居中对齐。
+        self.ui.main_leftbox_1.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
         self.ui.main_rightbox.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
         # --- 视频、图片 预览 --- #
 
@@ -137,7 +148,7 @@ class YOLOSHOW(QMainWindow, YOLOSHOWBASE):
         # --- Setting栏 初始化 --- #
 
         # --- MessageBar Init --- #
-        self.showStatus("Welcome to YOLOSHOW")
+        self.showStatus("Welcome")
         # --- MessageBar Init --- #
 
     def initThreads(self):
@@ -234,8 +245,8 @@ class YOLOSHOW(QMainWindow, YOLOSHOWBASE):
             self.initModel(yoloname=model_name)
             self.loadConfig()
         now_model_name = str(self.model_name).replace(".pt", "")
-        self.showStatus(f"Change Model to {now_model_name} Successfully")
-
+        self.showStatus(f"成功切换到 {now_model_name} 模型")
+    #启动或继续模型的检测过程，并将检测结果显示在 Qt 界面中
     def runModelProcess(self, yolo_name):
         yolo_thread = self.yolo_threads.get(yolo_name)
         yolo_thread.source = self.inputPath
@@ -245,7 +256,7 @@ class YOLOSHOW(QMainWindow, YOLOSHOWBASE):
             self.yolo_threads.start_thread(yolo_name)
         else:
             yolo_thread.is_continue = False
-            self.showStatus('Pause Detection')
+            self.showStatus('暂停检测')
 
     def runModel(self, runbuttonStatus=None):
         self.ui.save_status_button.setEnabled(False)
@@ -255,7 +266,7 @@ class YOLOSHOW(QMainWindow, YOLOSHOWBASE):
         if current_model_name is not None:
             self.runModelProcess(current_model_name)
         else:
-            self.showStatus('The current model is not supported')
+            self.showStatus('不支持当前模型')
             if self.ui.run_button.isChecked():
                 self.ui.run_button.setChecked(False)
 
@@ -265,7 +276,8 @@ class YOLOSHOW(QMainWindow, YOLOSHOWBASE):
             self.changeModel()
             self.runModel()
         else:
-            self.showStatus("Please select the Image/Video before starting detection...")
+            self.showStatus("开始检测前请先拼接视角")
+            # self.showStatus("Please select the Image/Video before starting detection...")
             self.ui.run_button.setChecked(False)
 
     # 停止识别
@@ -274,7 +286,7 @@ class YOLOSHOW(QMainWindow, YOLOSHOWBASE):
         self.ui.run_button.setChecked(False)
         self.ui.save_status_button.setEnabled(True)
         self.ui.progress_bar.setValue(0)
-        self.ui.main_leftbox.clear()  # clear image display
+        self.ui.main_leftbox_1.clear()  # clear image display
         self.ui.main_rightbox.clear()
         self.ui.Class_num.setText('--')
         self.ui.Target_num.setText('--')

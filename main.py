@@ -11,22 +11,22 @@ from PySide6.QtWidgets import QApplication
 from utils import glo
 from yoloshow.Window import YOLOSHOWWindow as yoloshowWindow
 from yoloshow.Window import YOLOSHOWVSWindow as yoloshowVSWindow
-from yoloshow.ChangeWindow import yoloshow2vs, vs2yoloshow
+from yoloshow.ChangeWindow import yoloshow2vs, vs2yoloshow,view_to_1
 
 if __name__ == '__main__':
     app = QApplication([])  # 创建应用程序实例
-    app.setWindowIcon(QIcon('images/yoloshow.ico'))  # 设置应用程序图标
+    app.setWindowIcon(QIcon('images/logo.png'))  # 设置应用程序图标
 
     # 为整个应用程序设置样式表，去除所有QFrame的边框
     app.setStyleSheet("QFrame { border: none; }")
 
     # 创建窗口实例
-    yoloshow = yoloshowWindow()
-    yoloshowvs = yoloshowVSWindow()
+    yoloshow = yoloshowWindow()#窗口1
+    yoloshowvs = yoloshowVSWindow()#窗口2
 
     # 初始化全局变量管理器，并设置值
-    glo._init()  # 初始化全局变量空间
-    glo.set_value('yoloshow', yoloshow)  # 存储yoloshow窗口实例
+    glo._init()  # 初始化全局变量空间：清空或重置全局变量空间，确保之前的全局变量不会影响当前程序的运行
+    glo.set_value('yoloshow', yoloshow)  # 将 value 存储到全局变量空间中，并用 key 作为标识符。
     glo.set_value('yoloshowvs', yoloshowvs)  # 存储yoloshowvs窗口实例
 
     # 从全局变量管理器中获取窗口实例
@@ -37,7 +37,8 @@ if __name__ == '__main__':
     yoloshow_glo.show()
 
     # 连接信号和槽，以实现界面之间的切换
-    yoloshow_glo.ui.src_vsmode.clicked.connect(yoloshow2vs)  # 从单模式切换到对比模式
-    yoloshowvs_glo.ui.src_singlemode.clicked.connect(vs2yoloshow)  # 从对比模式切换回单模式
+    yoloshow_glo.ui.src_vsmode.clicked.connect(view_to_1)  # 视角拼接
+    # yoloshow_glo.ui.src_vsmode.clicked.connect(yoloshow2vs)  # 从单模式切换到对比模式
+    # yoloshowvs_glo.ui.src_singlemode.clicked.connect(vs2yoloshow)  # 从对比模式切换回单模式
 
     app.exec()  # 启动应用程序的事件循环

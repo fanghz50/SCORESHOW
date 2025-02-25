@@ -243,7 +243,7 @@ Spacer{
                 <string notr="true"/>
                </property>
                <property name="text">
-                <string>YOLO SHOW -YOLO Graphical User Interface based on Pyside6</string>
+                <string>自动评分系统</string>
                </property>
                <property name="indent">
                 <number>-1</number>
@@ -565,7 +565,7 @@ QFrame#tableBox:hover{
                <property name="frameShadow">
                 <enum>QFrame::Raised</enum>
                </property>
-               <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4">
+               <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,4,4,1,4,1,4,1,4,1,4,1,4">
                 <property name="spacing">
                  <number>0</number>
                 </property>
@@ -660,7 +660,7 @@ QFrame#tableBox:hover{
                       </size>
                      </property>
                      <property name="text">
-                      <string> Menu   </string>
+                      <string>菜单</string>
                      </property>
                      <property name="iconSize">
                       <size>
@@ -675,105 +675,6 @@ QFrame#tableBox:hover{
                    </item>
                   </layout>
                  </widget>
-                </item>
-                <item>
-                 <spacer name="zSpacer1">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="QFrame" name="imgBox">
-                  <property name="minimumSize">
-                   <size>
-                    <width>180</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>180</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="layoutDirection">
-                   <enum>Qt::LeftToRight</enum>
-                  </property>
-                  <property name="frameShape">
-                   <enum>QFrame::StyledPanel</enum>
-                  </property>
-                  <property name="frameShadow">
-                   <enum>QFrame::Raised</enum>
-                  </property>
-                  <layout class="QHBoxLayout" name="horizontalLayout_4">
-                   <property name="spacing">
-                    <number>0</number>
-                   </property>
-                   <property name="leftMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="topMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="rightMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="bottomMargin">
-                    <number>0</number>
-                   </property>
-                   <item alignment="Qt::AlignLeft">
-                    <widget class="QPushButton" name="src_img">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>180</width>
-                       <height>0</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>180</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                     <property name="text">
-                      <string>Media</string>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>30</width>
-                       <height>30</height>
-                      </size>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="zSpacer2">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
                 </item>
                 <item>
                  <widget class="QFrame" name="webcamBox">
@@ -814,7 +715,7 @@ QFrame#tableBox:hover{
                    <property name="bottomMargin">
                     <number>0</number>
                    </property>
-                   <item alignment="Qt::AlignLeft">
+                   <item>
                     <widget class="QPushButton" name="src_webcam">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -838,7 +739,7 @@ QFrame#tableBox:hover{
                       <enum>Qt::LeftToRight</enum>
                      </property>
                      <property name="text">
-                      <string> Webcam</string>
+                      <string>打开摄像头</string>
                      </property>
                      <property name="iconSize">
                       <size>
@@ -853,95 +754,6 @@ QFrame#tableBox:hover{
                 </item>
                 <item>
                  <spacer name="zSpacer4">
-                  <property name="orientation">
-                   <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>20</width>
-                    <height>40</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-                <item>
-                 <widget class="QFrame" name="folderBox">
-                  <property name="minimumSize">
-                   <size>
-                    <width>180</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>180</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="layoutDirection">
-                   <enum>Qt::LeftToRight</enum>
-                  </property>
-                  <property name="frameShape">
-                   <enum>QFrame::StyledPanel</enum>
-                  </property>
-                  <property name="frameShadow">
-                   <enum>QFrame::Raised</enum>
-                  </property>
-                  <layout class="QHBoxLayout" name="horizontalLayout_6">
-                   <property name="spacing">
-                    <number>0</number>
-                   </property>
-                   <property name="leftMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="topMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="rightMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="bottomMargin">
-                    <number>0</number>
-                   </property>
-                   <item alignment="Qt::AlignLeft">
-                    <widget class="QPushButton" name="src_folder">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="minimumSize">
-                      <size>
-                       <width>180</width>
-                       <height>0</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>180</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                     <property name="text">
-                      <string> Folder  </string>
-                     </property>
-                     <property name="iconSize">
-                      <size>
-                       <width>30</width>
-                       <height>30</height>
-                      </size>
-                     </property>
-                     <property name="shortcut">
-                      <string>Ctrl+S</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="verticalSpacer">
                   <property name="orientation">
                    <enum>Qt::Vertical</enum>
                   </property>
@@ -992,8 +804,8 @@ QFrame#tableBox:hover{
                    <property name="bottomMargin">
                     <number>0</number>
                    </property>
-                   <item alignment="Qt::AlignLeft">
-                    <widget class="QPushButton" name="src_camera">
+                   <item>
+                    <widget class="QPushButton" name="src_vsmode">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                        <horstretch>0</horstretch>
@@ -1012,14 +824,20 @@ QFrame#tableBox:hover{
                        <height>16777215</height>
                       </size>
                      </property>
+                     <property name="styleSheet">
+                      <string notr="true"/>
+                     </property>
                      <property name="text">
-                      <string>IPcam  </string>
+                      <string>视角拼接</string>
                      </property>
                      <property name="iconSize">
                       <size>
                        <width>30</width>
                        <height>30</height>
                       </size>
+                     </property>
+                     <property name="shortcut">
+                      <string>Ctrl+S</string>
                      </property>
                     </widget>
                    </item>
@@ -1064,7 +882,7 @@ QFrame#tableBox:hover{
                     <number>0</number>
                    </property>
                    <item>
-                    <widget class="QPushButton" name="src_result">
+                    <widget class="QPushButton" name="src_camera">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                        <horstretch>0</horstretch>
@@ -1084,7 +902,7 @@ QFrame#tableBox:hover{
                       </size>
                      </property>
                      <property name="text">
-                      <string>    Result Pic  </string>
+                      <string>目标跟踪</string>
                      </property>
                      <property name="iconSize">
                       <size>
@@ -1135,7 +953,7 @@ QFrame#tableBox:hover{
                     <number>0</number>
                    </property>
                    <item>
-                    <widget class="QPushButton" name="src_table">
+                    <widget class="QPushButton" name="src_result">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                        <horstretch>0</horstretch>
@@ -1155,7 +973,7 @@ QFrame#tableBox:hover{
                       </size>
                      </property>
                      <property name="text">
-                      <string>    Result Tab  </string>
+                      <string>计算得分</string>
                      </property>
                      <property name="iconSize">
                       <size>
@@ -1218,7 +1036,7 @@ QFrame#tableBox:hover{
                     <number>0</number>
                    </property>
                    <item>
-                    <widget class="QPushButton" name="src_vsmode">
+                    <widget class="QPushButton" name="src_table">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                        <horstretch>0</horstretch>
@@ -1237,20 +1055,14 @@ QFrame#tableBox:hover{
                        <height>16777215</height>
                       </size>
                      </property>
-                     <property name="styleSheet">
-                      <string notr="true"/>
-                     </property>
                      <property name="text">
-                      <string>VS Mode</string>
+                      <string>成绩汇总</string>
                      </property>
                      <property name="iconSize">
                       <size>
                        <width>30</width>
                        <height>30</height>
                       </size>
-                     </property>
-                     <property name="shortcut">
-                      <string>Ctrl+S</string>
                      </property>
                     </widget>
                    </item>
@@ -1327,7 +1139,7 @@ QFrame#tableBox:hover{
                       </size>
                      </property>
                      <property name="text">
-                      <string>Setting</string>
+                      <string>系统设置</string>
                      </property>
                     </widget>
                    </item>
@@ -1588,7 +1400,7 @@ text-align:center;
 font: 700 italic 16pt &quot;Segoe UI&quot;;</string>
                            </property>
                            <property name="text">
-                            <string>Classes</string>
+                            <string>Fps</string>
                            </property>
                            <property name="alignment">
                             <set>Qt::AlignCenter</set>
@@ -1830,7 +1642,7 @@ text-align:center;
 font: 700 italic 16pt &quot;Segoe UI&quot;;</string>
                            </property>
                            <property name="text">
-                            <string>Targets</string>
+                            <string>相似度</string>
                            </property>
                            <property name="alignment">
                             <set>Qt::AlignCenter</set>
@@ -2075,7 +1887,7 @@ font: 700 italic 16pt &quot;Segoe UI&quot;;</string>
                             <number>-1</number>
                            </property>
                            <property name="text">
-                            <string>Fps</string>
+                            <string>时间</string>
                            </property>
                            <property name="alignment">
                             <set>Qt::AlignCenter</set>
@@ -2323,7 +2135,7 @@ font: 700 italic 16pt &quot;Segoe UI&quot;;</string>
                             <number>-1</number>
                            </property>
                            <property name="text">
-                            <string>Model</string>
+                            <string>模型</string>
                            </property>
                            <property name="alignment">
                             <set>Qt::AlignCenter</set>
@@ -2445,10 +2257,10 @@ font: 15pt &quot;Microsoft YaHei UI&quot;;
                <widget class="QWidget" name="horizontalLayoutWidget">
                 <property name="geometry">
                  <rect>
-                  <x>140</x>
+                  <x>130</x>
                   <y>10</y>
-                  <width>1011</width>
-                  <height>541</height>
+                  <width>1021</width>
+                  <height>521</height>
                  </rect>
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_9">
@@ -2457,7 +2269,43 @@ font: 15pt &quot;Microsoft YaHei UI&quot;;
                    <item>
                     <layout class="QHBoxLayout" name="horizontalLayout_29">
                      <item>
-                      <widget class="QLabel" name="main_leftbox_5">
+                      <widget class="QLabel" name="main_leftbox_1">
+                       <property name="minimumSize">
+                        <size>
+                         <width>200</width>
+                         <height>100</height>
+                        </size>
+                       </property>
+                       <property name="styleSheet">
+                        <string notr="true">background:rgb(0,30,0)</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="main_leftbox_2">
+                       <property name="minimumSize">
+                        <size>
+                         <width>200</width>
+                         <height>100</height>
+                        </size>
+                       </property>
+                       <property name="styleSheet">
+                        <string notr="true">background:rgb(0,30,0)</string>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_30">
+                     <item>
+                      <widget class="QLabel" name="main_leftbox_3">
                        <property name="minimumSize">
                         <size>
                          <width>200</width>
@@ -2490,46 +2338,10 @@ font: 15pt &quot;Microsoft YaHei UI&quot;;
                      </item>
                     </layout>
                    </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_30">
-                     <item>
-                      <widget class="QLabel" name="main_leftbox_7">
-                       <property name="minimumSize">
-                        <size>
-                         <width>200</width>
-                         <height>100</height>
-                        </size>
-                       </property>
-                       <property name="styleSheet">
-                        <string notr="true">background:rgb(0,30,0)</string>
-                       </property>
-                       <property name="text">
-                        <string/>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="main_leftbox_6">
-                       <property name="minimumSize">
-                        <size>
-                         <width>200</width>
-                         <height>100</height>
-                        </size>
-                       </property>
-                       <property name="styleSheet">
-                        <string notr="true">background:rgb(0,30,0)</string>
-                       </property>
-                       <property name="text">
-                        <string/>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
                   </layout>
                  </item>
                  <item>
-                  <widget class="QLabel" name="main_leftbox">
+                  <widget class="QLabel" name="main_rightbox">
                    <property name="minimumSize">
                     <size>
                      <width>200</width>

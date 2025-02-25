@@ -15,7 +15,10 @@ class YOLOSHOWWindow(YOLOSHOW):
 
     def __init__(self):
         super(YOLOSHOWWindow, self).__init__()
+        
         self.center()
+        # self.resize(400, 350)  # 只设置窗口的宽度和高度，不指定坐标
+        self.setGeometry(10, 10,400, 350) # x,y,width,height
         # --- 拖动窗口 改变窗口大小 --- #
         self.left_grip = CustomGrip(self, Qt.LeftEdge, True)
         self.right_grip = CustomGrip(self, Qt.RightEdge, True)
@@ -76,12 +79,20 @@ class YOLOSHOWWindow(YOLOSHOW):
         if event.button() == Qt.LeftButton:
             self.drag = False
 
+    # def center(self):
+    #     # PyQt6获取屏幕参数
+    #     screen = QGuiApplication.primaryScreen().size()
+    #     size = self.geometry()
+    #     self.move((screen.width() - size.width()) / 2,
+    #               (screen.height() - size.height()) / 2 - 10)
+        
     def center(self):
-        # PyQt6获取屏幕参数
-        screen = QGuiApplication.primaryScreen().size()
-        size = self.geometry()
-        self.move((screen.width() - size.width()) / 2,
-                  (screen.height() - size.height()) / 2 - 10)
+            screen = QGuiApplication.primaryScreen()
+            available_geometry = screen.availableGeometry()
+            frame_geometry = self.frameGeometry()
+            center_point = available_geometry.center()
+            frame_geometry.moveCenter(center_point)
+            self.move(frame_geometry.topLeft())
 
     # 拖动窗口 改变窗口大小
     def resizeEvent(self, event):

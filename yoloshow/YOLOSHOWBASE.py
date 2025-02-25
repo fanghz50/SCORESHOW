@@ -53,6 +53,7 @@ WIDTH_LOGO = 60
 WINDOW_SPLIT_BODY = 20
 KEYS_LEFT_BOX_MENU = ['src_menu', 'src_setting', 'src_webcam', 'src_folder', 'src_camera', 'src_vsmode', 'src_setting']
 # 模型名称和线程类映射
+
 MODEL_THREAD_CLASSES = {
     "yolov5": YOLOv5Thread,
     "yolov7": YOLOv7Thread,
@@ -92,7 +93,14 @@ class YOLOSHOWBASE:
         self.result_statistic = None
         self.detect_result = None
         self.allModelNames = ALL_MODEL_NAMES
+       
+     
+    
 
+    def clear_left_box(self, box_number):
+        box = self.left_boxes.get(box_number)  # 获取控件对象
+        if box:
+            box.clear()  # 清除控件内容
     # 初始化左侧菜单栏
     def initSiderWidget(self):
         # --- 侧边栏 --- #
@@ -119,8 +127,21 @@ class YOLOSHOWBASE:
         thread.progress_value = self.ui.progress_bar.maximum()
 
         # 信号槽连接使用单独定义的函数，减少闭包的创建
-        thread.send_input.connect(lambda x: self.showImg(x, self.ui.main_leftbox, 'img'))
-        thread.send_output.connect(lambda x: self.showImg(x, self.ui.main_rightbox, 'img'))
+        # 清除 main_leftbox_4
+        # self.clear_left_box(4)
+        
+       
+        #thread.send_input.connect(lambda x: self.showImg(x, self.left_boxes[cam+1], 'img'))
+        # thread.send_input.connect(lambda x: self.showImg(x, self.ui.main_leftbox_1, 'img'))
+       
+        #右侧显示拼接后的图像：需要处理输入x，x应该为拼接后的图像帧,现在是摄像头获取的数据帧
+        #changePixmap 信号负责传递图像数据lambda x: 接收信号传递的图像数据，并将其赋值给 x 变量，在函数中就是imag变量
+        
+        # thread.src_vsmode.connect(lambda x: self.showImg_right(x, self.ui.main_rightbox, 'img'))
+
+        #右侧显示检测后的图像:x为处理后的图像
+        thread.send_output.connect(lambda x: self.showImg_right_detec(x, self.ui.main_rightbox, 'img'))
+
         thread.send_msg.connect(lambda x: self.showStatus(x))
         thread.send_progress.connect(lambda x: self.ui.progress_bar.setValue(x))
         thread.send_fps.connect(lambda x: self.ui.fps_label.setText(str(x)))
@@ -128,6 +149,33 @@ class YOLOSHOWBASE:
         thread.send_target_num.connect(lambda x: self.ui.Target_num.setText(str(x)))
         thread.send_result_picture.connect(lambda x: self.setResultStatistic(x))
         thread.send_result_table.connect(lambda x: self.setTableResult(x))
+
+    # 加载模型
+    # def initModel(self, yoloname=None, cam=None):  # 添加 cam 参数
+    #     thread = self.yolo_threads.get(yoloname)
+    #     if not thread:
+    #         raise ValueError(f"No thread found for '{yoloname}'")
+    #     thread.new_model_name = f'{self.current_workpath}/ptfiles/' + self.ui.model_box.currentText()
+    #     thread.progress_value = self.ui.progress_bar.maximum()
+
+    #     # 信号槽连接使用单独定义的函数，减少闭包的创建
+    #     # 清除 main_leftbox_4
+    #     # self.clear_left_box(4)
+
+    #     if cam is not None:  # 确保 cam 被正确传递
+    #         thread.send_input.connect(lambda x: self.showImg(x, self.left_boxes[cam+1], 'img'))  # 使用 cam
+    #     else:
+    #         print("Warning: cam is None, using default left_boxes[1] for display.")
+    #         thread.send_input.connect(lambda x: self.showImg(x, self.left_boxes[1], 'img')) #如果cam没有被正确传递，默认使用1号窗口。
+
+    #     thread.send_output.connect(lambda x: self.showImg(x, self.ui.main_rightbox, 'img'))
+    #     thread.send_msg.connect(lambda x: self.showStatus(x))
+    #     thread.send_progress.connect(lambda x: self.ui.progress_bar.setValue(x))
+    #     thread.send_fps.connect(lambda x: self.ui.fps_label.setText(str(x)))
+    #     thread.send_class_num.connect(lambda x: self.ui.Class_num.setText(str(x)))
+    #     thread.send_target_num.connect(lambda x: self.ui.Target_num.setText(str(x)))
+    #     thread.send_result_picture.connect(lambda x: self.setResultStatistic(x))
+    #     thread.send_result_table.connect(lambda x: self.setTableResult(x))
 
     # 阴影效果
     def shadowStyle(self, widget, Color, top_bottom=None):
@@ -259,7 +307,7 @@ class YOLOSHOWBASE:
                                        }
                                   """)
             GLOBAL_WINDOW_STATE = True
-
+##############################################################################
     # 选择照片/视频 并展示
     def selectFile(self):
         # 获取上次选择文件的路径
@@ -284,47 +332,60 @@ class YOLOSHOWBASE:
                 ret, frame = self.cap.read()
                 if ret:
                     # rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    self.showImg(frame, self.ui.main_leftbox, 'img')
+                    self.showImg(frame, self.ui.main_leftbox_1, 'img')
             # 如果是图片 正常显示
             else:
-                self.showImg(self.inputPath, self.ui.main_leftbox, 'path')
+                self.showImg(self.inputPath, self.ui.main_leftbox_1, 'path')
             self.showStatus('Loaded File：{}'.format(os.path.basename(self.inputPath)))
             config['file_path'] = os.path.dirname(self.inputPath)
             config_json = json.dumps(config, ensure_ascii=False, indent=2)
             with open(config_file, 'w', encoding='utf-8') as f:
                 f.write(config_json)
-
-    # 选择摄像头
+    
+    # 选择并显示本地摄像头
     def selectWebcam(self):
         try:
             # get the number of local cameras
-            cam_num, cams = Camera().get_cam_num()
+            cam_num, cams = Camera().get_cam_num()#获取本地摄像头的数量和摄像头列表
             if cam_num > 0:
                 popMenu = RoundMenu(parent=self)
                 popMenu.setFixedWidth(self.ui.leftbox_bottom.width())
                 actions = []
-
+ 
                 for cam in cams:
                     cam_name = f'Camera_{cam}'
                     actions.append(Action(cam_name))
                     popMenu.addAction(actions[-1])
+                    #当用户选择该摄像头时，调用 self.actionWebcam(cam) 方法，并传入当前摄像头的标识符 cam。
+                    
                     actions[-1].triggered.connect(lambda: self.actionWebcam(cam))
-
+                #计算菜单弹出的位置
                 x = self.ui.webcamBox.mapToGlobal(self.ui.webcamBox.pos()).x()
                 y = self.ui.webcamBox.mapToGlobal(self.ui.webcamBox.pos()).y()
                 y = y - self.ui.webcamBox.frameGeometry().height() * 2
                 pos = QPoint(x, y)
+                #在指定的位置 pos 弹出菜单，并使用下拉动画效果 (DROP_DOWN)
                 popMenu.exec(pos, aniType=MenuAnimationType.DROP_DOWN)
             else:
-                self.showStatus('No camera found !!!')
+                self.showStatus('没有找到相机 !!!')
         except Exception as e:
             self.showStatus('%s' % e)
 
-    # 调用网络摄像头
+    # 在用户界面中显示摄像头捕获的图像
     def actionWebcam(self, cam):
-        self.showStatus(f'Loading camera：Camera_{cam}')
-        self.thread = WebcamThread(cam)
-        self.thread.changePixmap.connect(lambda x: self.showImg(x, self.ui.main_leftbox, 'img'))
+        self.showStatus(f'加载相机：Camera_{cam}')#cam 是传入的参数，表示用户选择的摄像头标识符
+        self.thread = WebcamThread(cam)#自定义的线程类，用于在后台从摄像头捕获图像
+        #将 changePixmap 信号（传递摄像头捕获的图像数据）与一个槽函数连接
+        #(摄像头捕获的图像数据,用户界面中用于显示图像的组件,指定图像显示的位置或方式)
+        self.left_boxes = {
+        1: self.ui.main_leftbox_1,
+        2: self.ui.main_leftbox_2,
+        3: self.ui.main_leftbox_3,
+        4: self.ui.main_leftbox_4,
+        }
+        
+        self.thread.changePixmap.connect(lambda x: self.showImg(x, self.left_boxes[cam+1], 'img'))
+        # self.thread.changePixmap.connect(lambda x: self.showImg(x, self.ui.main_leftbox_2, 'img'))
         self.thread.start()
         self.inputPath = int(cam)
 
@@ -378,7 +439,7 @@ class YOLOSHOWBASE:
                     return False
                 self.showStatus(f'Loading Rtsp：{self.rtspUrl}')
                 self.rtspThread = WebcamThread(self.rtspUrl)
-                self.rtspThread.changePixmap.connect(lambda x: self.showImg(x, self.ui.main_leftbox, 'img'))
+                self.rtspThread.changePixmap.connect(lambda x: self.showImg(x, self.ui.main_leftbox_1, 'img'))
                 self.rtspThread.start()
                 self.inputPath = self.rtspUrl
             elif parsed_url.scheme in ['http', 'https']:
@@ -387,7 +448,7 @@ class YOLOSHOWBASE:
                     return False
                 self.showStatus(f'Loading Http：{self.rtspUrl}')
                 self.rtspThread = WebcamThread(self.rtspUrl)
-                self.rtspThread.changePixmap.connect(lambda x: self.showImg(x, self.ui.main_leftbox, 'img'))
+                self.rtspThread.changePixmap.connect(lambda x: self.showImg(x, self.ui.main_leftbox_1, 'img'))
                 self.rtspThread.start()
                 self.inputPath = self.rtspUrl
             else:
@@ -435,15 +496,15 @@ class YOLOSHOWBASE:
             return False
 
     # 显示Label图片
-    def showImg(self, img, label, flag):
+    def showImg(self, img, label, flag):#label：用户界面中用于显示图像的标签组件
         try:
             if flag == "path":
                 img_src = cv2.imdecode(np.fromfile(img, dtype=np.uint8), -1)
             else:
                 img_src = img
-            ih, iw, _ = img_src.shape
+            ih, iw, _ = img_src.shape#获取图像尺寸
             w = label.geometry().width()
-            h = label.geometry().height()
+            h = label.geometry().height()#获取用户界面中 label 组件的宽度 (w) 和高度 (h)。
             # keep original aspect ratio
             if iw / w > ih / h:
                 scal = w / iw
@@ -454,11 +515,69 @@ class YOLOSHOWBASE:
                 scal = h / ih
                 nw = int(scal * iw)
                 nh = h
-                img_src_ = cv2.resize(img_src, (nw, nh))
+                img_src_ = cv2.resize(img_src, (nw, nh))#得到缩放后的图像 img_src_
 
-            frame = cv2.cvtColor(img_src_, cv2.COLOR_BGR2RGB)
+            frame = cv2.cvtColor(img_src_, cv2.COLOR_BGR2RGB)#将图像从 BGR 颜色空间转换为 RGB 颜色空间
             img = QImage(frame.data, frame.shape[1], frame.shape[0], frame.shape[2] * frame.shape[1],
-                         QImage.Format_RGB888)
+                         QImage.Format_RGB888)#将图像转换为 QImage
+            #将 QImage 转换为 QPixmap，并将其设置为 label 的显示内容。
+            label.setPixmap(QPixmap.fromImage(img))
+        except Exception as e:
+            print(repr(e))
+
+    def showImg_right(self, img, label, flag):#label：用户界面中用于显示图像的标签组件
+        try:
+            if flag == "path":
+                img_src = cv2.imdecode(np.fromfile(img, dtype=np.uint8), -1)
+            else:
+                img_src = img
+            ih, iw, _ = img_src.shape#获取图像尺寸
+            w = label.geometry().width()
+            h = label.geometry().height()#获取用户界面中 label 组件的宽度 (w) 和高度 (h)。
+            # keep original aspect ratio
+            if iw / w > ih / h:
+                scal = w / iw
+                nw = w
+                nh = int(scal * ih)
+                img_src_ = cv2.resize(img_src, (nw, nh))
+            else:
+                scal = h / ih
+                nw = int(scal * iw)
+                nh = h
+                img_src_ = cv2.resize(img_src, (nw, nh))#得到缩放后的图像 img_src_
+
+            frame = cv2.cvtColor(img_src_, cv2.COLOR_BGR2RGB)#将图像从 BGR 颜色空间转换为 RGB 颜色空间
+            img = QImage(frame.data, frame.shape[1], frame.shape[0], frame.shape[2] * frame.shape[1],
+                         QImage.Format_RGB888)#将图像转换为 QImage
+            #将 QImage 转换为 QPixmap，并将其设置为 label 的显示内容。
+            label.setPixmap(QPixmap.fromImage(img))
+        except Exception as e:
+            print(repr(e))
+    def showImg_right_detec(self, img, label, flag):#label：用户界面中用于显示图像的标签组件
+        try:
+            if flag == "path":
+                img_src = cv2.imdecode(np.fromfile(img, dtype=np.uint8), -1)
+            else:
+                img_src = img
+            ih, iw, _ = img_src.shape#获取图像尺寸
+            w = label.geometry().width()
+            h = label.geometry().height()#获取用户界面中 label 组件的宽度 (w) 和高度 (h)。
+            # keep original aspect ratio
+            if iw / w > ih / h:
+                scal = w / iw
+                nw = w
+                nh = int(scal * ih)
+                img_src_ = cv2.resize(img_src, (nw, nh))
+            else:
+                scal = h / ih
+                nw = int(scal * iw)
+                nh = h
+                img_src_ = cv2.resize(img_src, (nw, nh))#得到缩放后的图像 img_src_
+
+            frame = cv2.cvtColor(img_src_, cv2.COLOR_BGR2RGB)#将图像从 BGR 颜色空间转换为 RGB 颜色空间
+            img = QImage(frame.data, frame.shape[1], frame.shape[0], frame.shape[2] * frame.shape[1],
+                         QImage.Format_RGB888)#将图像转换为 QImage
+            #将 QImage 转换为 QPixmap，并将其设置为 label 的显示内容。
             label.setPixmap(QPixmap.fromImage(img))
         except Exception as e:
             print(repr(e))
@@ -592,7 +711,7 @@ class YOLOSHOWBASE:
             self.ui.run_button.setChecked(False)
             self.ui.save_status_button.setEnabled(True)
             self.ui.progress_bar.setValue(0)
-            self.ui.main_leftbox.clear()  # clear image display
+            self.ui.main_leftbox_1.clear()  # clear image display
             self.ui.main_rightbox.clear()
             self.ui.Class_num.setText('--')
             self.ui.Target_num.setText('--')
